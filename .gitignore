@@ -1,0 +1,25 @@
+.idea
+testdata
+*.svg
+.DS_Store
+*.docx
+
+# Build artifacts
+build/
+*.exe
+*.zip
+*.tar.gz
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# IDE files
+.vscode/
+*.swp
+*.swo
+
+# OS files
+Thumbs.db
+turbo-push-mcp

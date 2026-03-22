@@ -1,97 +1,236 @@
-# turbo-pub skill
+# TurboPush MCP Server
 
-让 AI 助手通过 [Turbo Push](https://turbopush.top) 将内容一键发布到微信公众号、微信视频号、B站、小红书、抖音、头条号、快手等多个平台。
+TurboPush 的 MCP (Model Context Protocol) Server，让 Claude 等大模型通过标准 MCP 协议直接调用 TurboPush 的内容发布能力。
 
-## 安装
+## 架构
 
-### 方式一：直接复制目录
+```
+Claude (Claude Code / Claude Desktop)
+  │
+  │  MCP 协议 (stdio)
+  │
+  ▼
+turbo-push-mcp (本项目)
+  │
+  │  HTTP REST API
+  │
+  ▼
+TurboPush 服务 (127.0.0.1:{port})
+```
 
-将 `turbo-pub/` 目录复制到你的 AI 助手的 skills 目录：
+MCP Server 作为独立进程运行，通过 HTTP 代理方式调用 TurboPush 现有 REST API，对主服务零侵入。
+
+## 编译
+
+需要 Go 1.25+。
 
 ```bash
-# OpenCode / OhMyOpenCode
-cp -r turbo-pub/ ~/.agents/skills/
-
-# 或其他支持 skills 的 AI 工具，复制到对应目录
+cd mcp
+go build -o turbo-push-mcp .
 ```
 
-### 方式二：打包安装（推荐）
-
-使用 `create-skill` 提供的打包脚本：
+国内环境如遇网络问题，可设置代理：
 
 ```bash
-# 打包为 .skill 文件
-python scripts/package_skill.py turbo-pub/
-
-# 生成 turbo-pub.skill，将其导入到支持的 AI 助手中
+GOPROXY=https://goproxy.cn,direct go build -o turbo-push-mcp .
 ```
 
-## 使用前提
+## 配置
 
-1. **安装 Turbo Push 客户端**：前往 [Turbo Push 官网](https://turbopush.top) 下载并安装
-2. **登录账号**：在 Turbo Push 客户端中登录你要发布的各平台账号
-3. **获取验证码**：首次使用时需要从 Turbo Push 客户端获取验证码
+MCP Server 通过环境变量连接 TurboPush 服务：
 
-## 快速使用
+| 环境变量 | 说明 |
+|---------|------|
+| `TURBO_PUSH_PORT` | TurboPush 服务端口 |
+| `TURBO_PUSH_AUTH` | TurboPush 认证 Token |
 
-安装 skill 后，直接告诉 AI 你想做什么：
+TurboPush 每次启动时会生成随机端口和 Token，可从启动日志中获取。
 
-> "帮我把这篇文章发布到微信公众号和B站"
+### Claude Code
 
-> "把这个视频发布到抖音和小红书，小红书设置位置为北京"
+编辑 `~/.claude/settings.json`（全局）或项目目录下 `.claude/settings.json`：
 
-> "查看最近的发布记录"
-
-AI 会自动：
-1. 启动本地 Turbo Push 服务（`assets/` 中的二进制文件）
-2. 获取已登录账号
-3. 创建内容并发布到指定平台
-4. 返回发布结果
-
-## 支持的平台
-
-| 平台 | platType | 文章 | 图文 | 视频 |
-|------|----------|:----:|:----:|:----:|
-| 微信公众号 | wechat | ✅ | ✅ | ✅ |
-| 微信视频号 | wechat_video | - | ✅ | ✅ |
-| B站 | bilibili | ✅ | - | ✅ |
-| 小红书 | xiaohongshu | - | ✅ | ✅ |
-| 抖音 | douyin | - | ✅ | ✅ |
-| 今日头条 | toutiao | ✅ | ✅ | ✅ |
-| 快手 | kuaishou | - | ✅ | ✅ |
-| 知乎 | zhihu | ✅ | ✅ | ✅ |
-| 新浪微博 | sina | ✅ | ✅ | ✅ |
-| TikTok | tiktok | - | - | ✅ |
-| 掘金 | juejin | ✅ | - | - |
-| 简书 | jianshu | ✅ | - | - |
-| A站 | acfun | ✅ | - | - |
-| 百家号 | baijiahao | ✅ | - | ✅ |
-| 腾讯内容 | omtencent | ✅ | - | - |
-| 微视 | weishi | - | - | ✅ |
-
-## 文件说明
-
-```
-turbo-pub/
-├── SKILL.md                    # Skill 主文件（AI 加载的入口）
-├── scripts/
-│   └── turbo_push_client.py    # Python 客户端（AI 直接运行）
-├── references/
-│   └── api.md                  # 完整平台参数文档（按需加载）
-└── assets/
-    ├── turbo_push_apple_silicon # macOS ARM64 (M系列芯片)
-    ├── turbo_push_mac_intel     # macOS Intel
-    ├── turbo_push_linux         # Linux
-    └── turbo_push.exe           # Windows
+```json
+{
+  "mcpServers": {
+    "turbo-push": {
+      "command": "/绝对路径/mcp/turbo-push-mcp",
+      "env": {
+        "TURBO_PUSH_PORT": "12345",
+        "TURBO_PUSH_AUTH": "你的token..."
+      }
+    }
+  }
+}
 ```
 
-## 常见问题
+### Claude Desktop
 
-**Q: 提示找不到二进制文件？**  
-A: 确保 `assets/` 目录中有对应平台的可执行文件，并告知 AI `assets/` 的绝对路径。
+编辑 `~/Library/Application Support/Claude/claude_desktop_config.json`（macOS）：
 
-**Q: 登录状态失效？**  
-A: 重新启动服务后，在 Turbo Push 客户端获取新验证码重新登录。
+```json
+{
+  "mcpServers": {
+    "turbo-push": {
+      "command": "/绝对路径/mcp/turbo-push-mcp",
+      "env": {
+        "TURBO_PUSH_PORT": "12345",
+        "TURBO_PUSH_AUTH": "你的token..."
+      }
+    }
+  }
+}
+```
 
-**Q: 发布失败怎么排查？**  
-A: 让 AI 调用 `get_publish_record_info(record_id)` 查看具体失败原因。
+### 手动验证
+
+```bash
+TURBO_PUSH_PORT=12345 TURBO_PUSH_AUTH=xxx ./turbo-push-mcp
+```
+
+启动后会通过 stdin/stdout 进行 MCP 通信，可用 [MCP Inspector](https://github.com/modelcontextprotocol/inspector) 调试。
+
+## 可用 Tools
+
+共 18 个 Tool，覆盖完整发布流程：
+
+### 平台
+
+| Tool | 说明 |
+|------|------|
+| `list_platforms` | 获取支持的发布平台列表 |
+
+### 账号
+
+| Tool | 说明 |
+|------|------|
+| `list_accounts` | 获取所有平台账号 |
+| `list_logged_accounts` | 获取已登录的账号 |
+
+### 平台配置
+
+| Tool | 说明 |
+|------|------|
+| `list_platform_settings` | 获取平台配置列表 |
+| `create_platform_setting` | 创建平台配置 |
+| `update_platform_setting` | 更新平台配置 |
+| `delete_platform_setting` | 删除平台配置 |
+
+### 内容管理
+
+| Tool | 说明 |
+|------|------|
+| `list_articles` | 获取内容列表 |
+| `get_article` | 获取内容详情 |
+| `create_article` | 创建文章 |
+| `create_graph_text` | 创建图文 |
+| `create_video` | 创建视频 |
+| `update_article` | 更新内容 |
+| `delete_article` | 删除内容 |
+
+### 发布
+
+| Tool | 说明 |
+|------|------|
+| `publish_article` | 发布文章到指定账号 |
+| `publish_graph_text` | 发布图文到指定账号 |
+| `publish_video` | 发布视频到指定账号 |
+
+### 发布记录
+
+| Tool | 说明 |
+|------|------|
+| `list_records` | 获取发布记录列表 |
+| `get_record_info` | 获取发布记录详情 |
+
+## 典型工作流
+
+在 Claude 中可以这样使用：
+
+```
+> 帮我查看有哪些已登录的抖音账号
+
+> 创建一篇文章，标题"产品更新公告"，内容为 ...
+
+> 把这篇文章发布到所有已登录的微信公众号账号
+```
+
+Claude 会自动编排调用：`list_logged_accounts` → `create_article` → `publish_article`。
+
+### 发布参数示例
+
+发布时需要构造 `postAccounts` 数组：
+
+```json
+{
+  "article_id": 1,
+  "postAccounts": [
+    {
+      "id": 10,
+      "platName": "抖音账号A",
+      "settings": {
+        "platType": "douyin",
+        "allowSave": true,
+        "lookScope": 0
+      }
+    }
+  ]
+}
+```
+
+`settings.platType` 对应平台标识：
+
+| platType | 平台 |
+|----------|------|
+| `wechat` | 微信公众号 |
+| `wechat-video` | 微信视频号 |
+| `douyin` | 抖音 |
+| `toutiaohao` | 今日头条 |
+| `kuaishou` | 快手 |
+| `xiaohongshu` | 小红书 |
+| `bilibili` | 哔哩哔哩 |
+| `zhihu` | 知乎 |
+| `sina` | 新浪微博 |
+| `csdn` | CSDN |
+| `juejin` | 掘金 |
+| `jianshuhao` | 简书 |
+| `tiktok` | TikTok |
+| `youtube` | YouTube |
+| `x` | X (Twitter) |
+| `pinduoduo` | 拼多多 |
+| `acfun` | AcFun |
+| `omtencent` | 企鹅号 |
+| `weishi` | 微视 |
+| `baijiahao` | 百家号 |
+
+各平台 `settings` 的完整字段说明见 `docs/api.md` 中的 **setting 参数说明** 章节。
+
+## Skills 集成
+
+### OpenClaw
+
+将 `mcp/skills/turbo-push/` 目录复制到 OpenClaw 的 skills 目录：
+
+```bash
+cp -r mcp/skills/turbo-push ~/.openclaw/workspace/skills/
+```
+
+重启 OpenClaw 或刷新 skills 即可使用。Skill 会自动配置 MCP Server 连接。
+
+### Claude Code
+
+项目已内置 3 个 slash command（位于 `.claude/commands/`）：
+
+| 命令 | 说明 |
+|------|------|
+| `/publish` | 发布内容到指定平台 |
+| `/publish-all` | 批量发布到所有已登录账号 |
+| `/status` | 查看账号和发布状态 |
+
+使用示例：
+
+```
+/publish 把这篇文章发到所有抖音账号
+/publish-all 标题"新品上线" 内容为...
+/status 查看最近的发布记录
+```

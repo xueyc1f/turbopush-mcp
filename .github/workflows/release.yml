@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+env:
+  GO_VERSION: '1.25'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          - goos: darwin
+            goarch: amd64
+          - goos: darwin
+            goarch: arm64
+          - goos: windows
+            goarch: amd64
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Build binary
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+        CGO_ENABLED: 0
+      run: |
+        case "${{ matrix.goarch }}" in
+          "amd64") ARCH="x86_64" ;;
+          "arm64") ARCH="aarch64" ;;
+          *) ARCH="${{ matrix.goarch }}" ;;
+        esac
+
+        case "${{ matrix.goos }}" in
+          "darwin") PLATFORM="apple-darwin" ;;
+          "linux") PLATFORM="unknown-linux-gnu" ;;
+          "windows") PLATFORM="pc-windows-msvc" ;;
+          *) PLATFORM="${{ matrix.goos }}" ;;
+        esac
+
+        EXT=""
+        if [ "${{ matrix.goos }}" = "windows" ]; then
+          EXT=".exe"
+        fi
+
+        FILENAME="turbo-push-mcp-${ARCH}-${PLATFORM}${EXT}"
+
+        go build -ldflags="-s -w" -o "${FILENAME}" .
+
+        echo "ASSET_PATH=${FILENAME}" >> $GITHUB_ENV
+        echo "✅ Built: ${FILENAME}"
+
+    - name: Upload to Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: ${{ env.ASSET_PATH }}
