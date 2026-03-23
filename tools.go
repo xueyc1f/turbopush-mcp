@@ -9,6 +9,7 @@ func registerTools(s *server.MCPServer, c *Client) {
 	registerPlatformTools(s, c)
 	registerAccountTools(s, c)
 	registerSettingTools(s, c)
+	registerSchemaTools(s, c)
 	registerContentTools(s, c)
 	registerPublishTools(s, c)
 	registerRecordTools(s, c)

@@ -15,49 +15,63 @@ func registerPublishTools(s *server.MCPServer, c *Client) {
 		mcp.NewTool("publish_article",
 			mcp.WithDescription(`发布文章到指定平台账号。需要先通过 create_article 创建文章内容，然后调用此工具发布。
 postAccounts 数组中每个元素需要包含：id(账号ID)、platName(平台名)、settings(平台配置，必须包含 platType 字段)。
+发布前请先调用 get_platform_setting_schema 查询目标平台的 article 类型所需的 settings 字段。
 发布是同步操作，会等待所有账号发布完成后返回结果汇总。`),
 			mcp.WithNumber("article_id", mcp.Required(), mcp.Description("文章ID（通过 create_article 创建后获得）")),
 			mcp.WithBoolean("syncDraft", mcp.Description("是否仅同步草稿（不直接发布），默认 false")),
 			mcp.WithBoolean("headless", mcp.Description("是否使用无头浏览器模式，默认 false")),
 			mcp.WithArray("postAccounts", mcp.Required(), mcp.Description("发布目标账号数组，每个元素包含 id(账号ID)、platName(平台名)、settings(平台配置对象，含 platType)")),
 		),
-		publishHandler(c, "/sse/article/%d"),
+		publishHandler(c, "/sse/article/%d", ContentArticle),
 	)
 
 	s.AddTool(
 		mcp.NewTool("publish_graph_text",
 			mcp.WithDescription(`发布图文到指定平台账号。需要先通过 create_graph_text 创建图文内容，然后调用此工具发布。
+发布前请先调用 get_platform_setting_schema 查询目标平台的 graph_text 类型所需的 settings 字段。
 参数说明同 publish_article。`),
 			mcp.WithNumber("article_id", mcp.Required(), mcp.Description("图文ID（通过 create_graph_text 创建后获得）")),
 			mcp.WithBoolean("syncDraft", mcp.Description("是否仅同步草稿")),
 			mcp.WithBoolean("headless", mcp.Description("是否使用无头浏览器模式")),
 			mcp.WithArray("postAccounts", mcp.Required(), mcp.Description("发布目标账号数组")),
 		),
-		publishHandler(c, "/sse/graphText/%d"),
+		publishHandler(c, "/sse/graphText/%d", ContentGraphText),
 	)
 
 	s.AddTool(
 		mcp.NewTool("publish_video",
 			mcp.WithDescription(`发布视频到指定平台账号。需要先通过 create_video 创建视频内容，然后调用此工具发布。
+发布前请先调用 get_platform_setting_schema 查询目标平台的 video 类型所需的 settings 字段。
 参数说明同 publish_article。`),
 			mcp.WithNumber("article_id", mcp.Required(), mcp.Description("视频ID（通过 create_video 创建后获得）")),
 			mcp.WithBoolean("syncDraft", mcp.Description("是否仅同步草稿")),
 			mcp.WithBoolean("headless", mcp.Description("是否使用无头浏览器模式")),
 			mcp.WithArray("postAccounts", mcp.Required(), mcp.Description("发布目标账号数组")),
 		),
-		publishHandler(c, "/sse/video/%d"),
+		publishHandler(c, "/sse/video/%d", ContentVideo),
 	)
 }
 
-func publishHandler(c *Client, pathTemplate string) server.ToolHandlerFunc {
+func publishHandler(c *Client, pathTemplate string, contentType string) server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		args := request.GetArguments()
 		rid, err := request.RequireFloat("article_id")
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}
+
+		// 验证并填充 postAccounts 中的 settings
+		postAccounts, ok := args["postAccounts"].([]any)
+		if !ok || len(postAccounts) == 0 {
+			return mcp.NewToolResultError("postAccounts 不能为空"), nil
+		}
+
+		if errMsg := validateAndFillDefaults(postAccounts, contentType); errMsg != "" {
+			return mcp.NewToolResultError(errMsg), nil
+		}
+
 		body := map[string]any{
-			"postAccounts": args["postAccounts"],
+			"postAccounts": postAccounts,
 		}
 		if v, ok := args["syncDraft"].(bool); ok {
 			body["syncDraft"] = v
@@ -74,6 +88,73 @@ func publishHandler(c *Client, pathTemplate string) server.ToolHandlerFunc {
 
 		return mcp.NewToolResultText(summarizeEvents(events)), nil
 	}
+}
+
+// validateAndFillDefaults 校验 postAccounts 中每个账号的 settings 必填字段，
+// 并自动填充 schema 中有默认值但 settings 中未设置的字段。
+// 返回空字符串表示校验通过，否则返回错误消息。
+func validateAndFillDefaults(postAccounts []any, contentType string) string {
+	var errs []string
+
+	for i, acc := range postAccounts {
+		accMap, ok := acc.(map[string]any)
+		if !ok {
+			errs = append(errs, fmt.Sprintf("postAccounts[%d]: 格式无效，需要对象", i))
+			continue
+		}
+
+		settings, ok := accMap["settings"].(map[string]any)
+		if !ok {
+			errs = append(errs, fmt.Sprintf("postAccounts[%d]: 缺少 settings 对象", i))
+			continue
+		}
+
+		platType, _ := settings["platType"].(string)
+		if platType == "" {
+			errs = append(errs, fmt.Sprintf("postAccounts[%d]: settings 中缺少 platType 字段", i))
+			continue
+		}
+
+		// 获取 schema
+		fields, ok := getSchema(platType, contentType)
+		if !ok {
+			// 平台没有 schema 定义，跳过验证（允许通过，由后端处理）
+			continue
+		}
+
+		// 检查必填字段
+		var missing []string
+		for _, f := range fields {
+			if f.Required {
+				if _, exists := settings[f.Name]; !exists {
+					missing = append(missing, f.Name)
+				}
+			}
+		}
+		if len(missing) > 0 {
+			platName, _ := accMap["platName"].(string)
+			if platName == "" {
+				platName = platType
+			}
+			errs = append(errs, fmt.Sprintf(
+				"postAccounts[%d] (%s): 缺少必填字段 [%s]，请先调用 get_platform_setting_schema 查看所需字段",
+				i, platName, strings.Join(missing, ", ")))
+		}
+
+		// 自动填充默认值
+		for _, f := range fields {
+			if f.Default != nil {
+				if _, exists := settings[f.Name]; !exists {
+					settings[f.Name] = f.Default
+				}
+			}
+		}
+	}
+
+	if len(errs) > 0 {
+		return "发布参数校验失败:\n" + strings.Join(errs, "\n")
+	}
+	return ""
 }
 
 func summarizeEvents(events []sseEvent) string {

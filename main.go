@@ -72,13 +72,21 @@ func main() {
 		server.WithInstructions(`TurboPush 多平台内容发布工具。
 
 典型工作流程：
-1. list_platforms - 查看支持的平台
-2. list_logged_accounts - 查看已登录的账号
-3. create_article / create_graph_text / create_video - 创建内容
-4. publish_article / publish_graph_text / publish_video - 发布到指定账号
-5. list_records / get_record_info - 查看发布结果
+1. list_platforms — 查看支持的平台
+2. list_logged_accounts — 查看已登录的账号
+3. create_article / create_graph_text / create_video — 创建内容
+4. get_platform_setting_schema — 查询目标平台的 settings 字段定义（必填项、默认值、可选枚举）
+5. 构造 postAccounts 数组，settings 中包含 platType 和 schema 中要求的字段
+6. publish_article / publish_graph_text / publish_video — 发布到指定账号
+7. list_records / get_record_info — 查看发布结果
 
-发布时需要构造 postAccounts 数组，每个元素包含：
+重要提示：
+- 发布前务必调用 get_platform_setting_schema 查询目标平台所需的 settings 字段
+- 不同平台、不同内容类型（article/graph_text/video）的 settings 字段不同
+- 必填字段缺失会导致发布前校验失败
+- 有默认值的字段如果未设置会自动填充
+
+发布时 postAccounts 数组每个元素包含：
 - id: 账号ID（从 list_logged_accounts 获取）
 - platName: 平台名称
 - settings: 平台配置对象，必须包含 platType 字段（如 "wechat"、"douyin" 等）
