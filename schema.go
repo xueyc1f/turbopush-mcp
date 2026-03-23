@@ -287,18 +287,15 @@ var platformSchemas = map[string]map[string][]FieldDef{
 
 	// ==================== 百家号 ====================
 	"baijiahao": {
-		ContentAll: {
-			{Name: "watermark", Type: "uint", Description: "水印（仅视频）", Default: 0, Options: []OptionDef{
+		ContentArticle:   baijiahaoBaseSetting(),
+		ContentGraphText: baijiahaoBaseSetting(),
+		ContentVideo: append(baijiahaoBaseSetting(),
+			FieldDef{Name: "watermark", Type: "uint", Description: "水印", Default: 0, Options: []OptionDef{
 				{Value: 0, Description: "不添加"},
 				{Value: 1, Description: "添加水印"},
 				{Value: 2, Description: "添加贴片"},
 			}},
-			{Name: "location", Type: "string", Description: "位置"},
-			{Name: "classify", Type: "string", Description: "分类（格式：\"一级分类/二级分类\" 或 \"一级/二级/三级\"）"},
-			{Name: "activity", Type: "string", Description: "活动"},
-			{Name: "byAI", Type: "bool", Description: "AI创作声明"},
-			timerPublishField,
-		},
+		),
 	},
 
 	// ==================== 知乎 ====================
@@ -566,6 +563,16 @@ func sinaArticleSetting() []FieldDef {
 			{Value: 2, Description: "内容为虚构演绎"},
 		}),
 		{Name: "dynamic", Type: "string", Description: "粉丝动态"},
+		timerPublishField,
+	}
+}
+
+func baijiahaoBaseSetting() []FieldDef {
+	return []FieldDef{
+		{Name: "location", Type: "string", Description: "位置"},
+		{Name: "classify", Type: "string", Description: "分类（格式：\"一级分类/二级分类\" 或 \"一级/二级/三级\"）"},
+		{Name: "activity", Type: "string", Description: "活动"},
+		{Name: "byAI", Type: "bool", Description: "AI创作声明"},
 		timerPublishField,
 	}
 }
