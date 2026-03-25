@@ -11,17 +11,13 @@ func registerPlatformTools(s *server.MCPServer, c *Client) {
 	s.AddTool(
 		mcp.NewTool("list_platforms",
 			mcp.WithDescription("获取所有支持的发布平台列表，包含平台ID、名称、支持的内容类型（文章/图文/视频）"),
-			mcp.WithBoolean("enable", mcp.Description("仅返回已启用的平台")),
 			mcp.WithBoolean("article", mcp.Description("筛选支持文章的平台")),
 			mcp.WithBoolean("graph_text", mcp.Description("筛选支持图文的平台")),
 			mcp.WithBoolean("video", mcp.Description("筛选支持视频的平台")),
 		),
 		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 			args := request.GetArguments()
-			path := "/platform/list?"
-			if v, ok := args["enable"].(bool); ok && v {
-				path += "enable=true&"
-			}
+			path := "/platform/list?simple=true&"
 			if v, ok := args["article"].(bool); ok && v {
 				path += "article=true&"
 			}

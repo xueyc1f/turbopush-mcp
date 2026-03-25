@@ -11,14 +11,14 @@ import (
 func registerContentTools(s *server.MCPServer, c *Client) {
 	s.AddTool(
 		mcp.NewTool("list_articles",
-			mcp.WithDescription("获取内容列表（文章/图文/视频），支持按状态筛选和分页"),
+			mcp.WithDescription("获取内容列表（文章:publish_type=1/图文:publish_type=2/视频:publish_type=3），支持按状态筛选和分页"),
 			mcp.WithNumber("status", mcp.Description("状态筛选：1=草稿，2=已发布")),
 			mcp.WithNumber("current", mcp.Description("页码，默认1")),
 			mcp.WithNumber("size", mcp.Description("每页条数，默认10")),
 		),
 		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 			args := request.GetArguments()
-			path := "/article/list?"
+			path := "/article/list?simple=true&"
 			if v, ok := args["status"].(float64); ok {
 				path += fmt.Sprintf("status=%d&", int(v))
 			}
@@ -89,7 +89,7 @@ func registerContentTools(s *server.MCPServer, c *Client) {
 		mcp.NewTool("create_graph_text",
 			mcp.WithDescription("创建图文内容，需要提供图片文件路径。创建后可通过 publish_graph_text 发布到各平台"),
 			mcp.WithString("title", mcp.Required(), mcp.Description("图文标题")),
-			mcp.WithString("desc", mcp.Description("图文描述")),
+			mcp.WithString("desc", mcp.Description("图文描述，支持使用'#话题名称#'设置话题, 使用'@用户名称 '提及用户，如：#每日发文##解放生产力#@TurboPush @luster 描述内容...")),
 			mcp.WithArray("files", mcp.Description("图片文件路径数组")),
 			mcp.WithArray("thumb", mcp.Description("封面图路径数组，为空则自动生成")),
 		),
@@ -122,7 +122,7 @@ func registerContentTools(s *server.MCPServer, c *Client) {
 		mcp.NewTool("create_video",
 			mcp.WithDescription("创建视频内容，需要提供视频文件路径。创建后可通过 publish_video 发布到各平台"),
 			mcp.WithString("title", mcp.Required(), mcp.Description("视频标题")),
-			mcp.WithString("desc", mcp.Description("视频描述")),
+			mcp.WithString("desc", mcp.Description("视频描述，支持使用'#话题名称#'设置话题, 使用'@用户名称 '提及用户，如：#每日发文##解放生产力#@TurboPush @luster 描述内容...")),
 			mcp.WithArray("files", mcp.Required(), mcp.Description("视频文件路径数组")),
 			mcp.WithArray("thumb", mcp.Description("封面图路径数组，为空则自动生成")),
 		),
