@@ -72,7 +72,7 @@ func getSupportedPlatTypes() []string {
 var timerPublishField = FieldDef{
 	Name:        "timerPublish",
 	Type:        "object",
-	Description: "定时发布，对象格式：{\"enable\": true, \"timer\": \"2025-04-25 15:54:00\"}",
+	Description: "定时发布配置（settings 中的字段）。对象格式：{\"enable\": true, \"timer\": \"2025-04-25 15:54:00\"}。enable=true 启用定时发布，timer 为发布时间（格式：YYYY-MM-DD HH:mm:ss）",
 }
 
 var sourceFieldFactory = func(desc string, options []OptionDef) FieldDef {
