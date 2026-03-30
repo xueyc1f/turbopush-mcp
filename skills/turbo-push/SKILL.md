@@ -1,15 +1,57 @@
 ---
 name: TurboPush
 emoji: 📢
-version: 1.0.0
+version: 1.0.1
 description: 多平台内容发布助手，支持 20+ 平台一键发布文章、图文、视频
+source: https://github.com/xueyc/turbopush-mcp
+license: MIT
 mcp_servers:
-  - name: turbo-push
-    command: turbo-push-mcp
-    env:
-      TURBO_PUSH_PORT: "${TURBO_PUSH_PORT}"
-      TURBO_PUSH_AUTH: "${TURBO_PUSH_AUTH}"
+- name: turbo-push
+  command: turbo-push-mcp
+  env:
+    TURBO_PUSH_PORT: "${TURBO_PUSH_PORT}"
+    TURBO_PUSH_AUTH: "${TURBO_PUSH_AUTH}"
+metadata:
+  openclaw:
+    requires:
+      env:
+        - TURBO_PUSH_PORT
+        - TURBO_PUSH_AUTH
+      bins:
+        - turbo-push-mcp
+    primaryEnv: TURBO_PUSH_AUTH
 ---
+
+## 安装说明
+
+### 1. 安装 MCP Server
+
+从源码编译（需要 Go 1.25+）：
+
+\`\`\`bash
+git clone https://github.com/xueyc/turbopush-mcp.git
+cd turbopush-mcp
+go build -o turbo-push-mcp .
+# 将二进制文件放入 PATH
+sudo mv turbo-push-mcp /usr/local/bin/
+\`\`\`
+
+或下载预编译二进制文件（推荐）：https://github.com/xueyc/turbopush-mcp/releases
+
+### 2. 环境变量说明
+
+| 变量 | 说明 | 获取方式 |
+|------|------|----------|
+| \`TURBO_PUSH_PORT\` | TurboPush 服务端口 | TurboPush 启动时自动设置 |
+| \`TURBO_PUSH_AUTH\` | 认证 Token | TurboPush 启动时自动设置 |
+
+**注意**：这些环境变量由 [TurboPush](https://github.com/xueyc/turbopush) 应用程序自动管理，无需手动配置。
+
+### 3. 安全说明
+
+- 账号凭证由 TurboPush 应用本地管理，不经过云端
+- MCP Server 与 TurboPush 通过 localhost HTTP API 通信
+- Token 仅用于本地服务认证，不涉及远程服务器
 
 # TurboPush 多平台内容发布助手
 
