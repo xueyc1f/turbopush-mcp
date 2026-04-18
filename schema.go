@@ -836,17 +836,22 @@ func sinaArticleSetting() []FieldDef {
 // sinaGtSetting 新浪微博图文（微博）设置
 func sinaGtSetting() []FieldDef {
 	return []FieldDef{
+		{Name: "collection", Type: "string", Description: "专栏（请确保专栏已在平台创建）"},
+		{Name: "dynamic", Type: "string", Description: "粉丝动态"},
 		{Name: "location", Type: "string", Description: "地点（将选择搜索到的第一个结果）"},
 		{Name: "lookScope", Type: "uint", Description: "可见范围", Default: 0, Options: []OptionDef{
 			{Value: 0, Description: "公开"},
 			{Value: 1, Description: "粉丝"},
 			{Value: 2, Description: "好友圈"},
-			{Value: 3, Description: "自己"},
+			{Value: 3, Description: "仅自己可见"},
+			{Value: 4, Description: "群可见"},
 		}},
 		sourceFieldFactory("内容声明", []OptionDef{
 			{Value: 0, Description: "不声明"},
 			{Value: 1, Description: "内容由AI生成"},
 			{Value: 2, Description: "内容为虚构演绎"},
+			{Value: 3, Description: "内容为自主创作"},
+			{Value: 4, Description: "内容为转载"},
 		}),
 		timerPublishField,
 	}
@@ -862,19 +867,22 @@ func sinaVideoSetting() []FieldDef {
 			{Value: 2, Description: "转载"},
 		}},
 		{Name: "classify", Type: "string", Description: "视频分类（格式：\"栏目/分类\"）"},
-		{Name: "stress", Type: "bool", Description: "允许画重点", Default: true},
 		{Name: "collection", Type: "string", Description: "合集（允许加入多个合集，多个用 / 分割）"},
+		{Name: "dynamic", Type: "string", Description: "粉丝动态"},
 		{Name: "location", Type: "string", Description: "地点（将选择搜索到的第一个结果）"},
 		{Name: "lookScope", Type: "uint", Description: "可见范围", Default: 0, Options: []OptionDef{
 			{Value: 0, Description: "公开"},
 			{Value: 1, Description: "粉丝"},
 			{Value: 2, Description: "好友圈"},
-			{Value: 3, Description: "自己"},
+			{Value: 3, Description: "仅自己可见"},
+			{Value: 4, Description: "群可见"},
 		}},
 		sourceFieldFactory("内容声明", []OptionDef{
 			{Value: 0, Description: "不声明"},
 			{Value: 1, Description: "内容由AI生成"},
 			{Value: 2, Description: "内容为虚构演绎"},
+			{Value: 3, Description: "内容为自主创作"},
+			{Value: 4, Description: "内容为转载"},
 		}),
 		timerPublishField,
 	}
