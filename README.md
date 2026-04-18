@@ -20,12 +20,42 @@ TurboPush 服务 (127.0.0.1:{port})
 
 MCP Server 作为独立进程运行，通过 HTTP 代理方式调用 TurboPush 现有 REST API，对主服务零侵入。
 
-## 编译
+## 一键安装（推荐）
+
+脚本会根据当前系统自动下载对应平台的二进制，放到 `~/.local/bin/turbo-push-mcp`，并在检测到 `claude` CLI 时自动执行 `claude mcp add turbo-push` 完成注册。
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/xueyc1f/turbopush-mcp/main/install.sh | sh
+```
+
+可选参数（环境变量方式传入）：
+
+| 变量 | 说明 | 默认值 |
+| --- | --- | --- |
+| `VERSION` | 指定版本，如 `v1.1.1` | 最新 release |
+| `INSTALL_DIR` | 安装目录 | `$HOME/.local/bin` |
+| `SKIP_MCP_ADD` | 设为 `1` 跳过自动注册 | `0` |
+
+示例：安装指定版本到 `/usr/local/bin`
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/xueyc1f/turbopush-mcp/main/install.sh \
+  | VERSION=v1.1.1 INSTALL_DIR=/usr/local/bin sh
+```
+
+安装完成后重启 Claude Code 即可使用。若未自动注册，可手动执行：
+
+```bash
+claude mcp add turbo-push -- ~/.local/bin/turbo-push-mcp
+```
+
+> Windows 用户请前往 [Releases](https://github.com/xueyc1f/turbopush-mcp/releases) 页面手动下载 `turbo-push-mcp-x86_64-pc-windows-msvc.exe`。
+
+## 从源码编译
 
 需要 Go 1.25+。
 
 ```bash
-cd mcp
 go build -o turbo-push-mcp .
 ```
 
