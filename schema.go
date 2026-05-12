@@ -157,6 +157,16 @@ var platformSchemas = map[string]map[string][]FieldDef{
 			{Name: "location", Type: "string", Description: "标签值：位置标签值不输入将默认选择猜你想加或第一个选项；团购标签值必须按「范围/商品名/推广标题」格式输入"},
 			{Name: "hotspot", Type: "string", Description: "关联热点（将选择搜索到的第一个结果）"},
 			{Name: "allowSave", Type: "bool", Description: "允许他人保存", Default: true},
+			{Name: "source", Type: "uint", Required: true, Description: "自主声明（必填，发布前必须从以下选项中选择一项）", Default: 0, Options: []OptionDef{
+				{Value: 1, Description: "内容由AI生成"},
+				{Value: 2, Description: "内容为个人观点或见解"},
+				{Value: 3, Description: "内容为转载信息"},
+				{Value: 4, Description: "内容含营销推广信息"},
+				{Value: 5, Description: "虚构演绎，仅供娱乐"},
+				{Value: 6, Description: "危险行为，请勿模仿"},
+				{Value: 7, Description: "可能引人不适"},
+				{Value: 8, Description: "无需添加自主声明"},
+			}},
 			{Name: "lookScope", Type: "uint", Description: "可见范围（加入合集后该项配置不生效）", Default: 0, Options: []OptionDef{
 				{Value: 0, Description: "公开"},
 				{Value: 1, Description: "好友"},
@@ -892,7 +902,7 @@ func sinaVideoSetting() []FieldDef {
 func baijiahaoBaseSetting() []FieldDef {
 	return []FieldDef{
 		{Name: "location", Type: "string", Description: "位置（将选择搜索到的第一个结果，仅对视频和图文生效）"},
-		{Name: "classify", Type: "string", Description: "分类（格式：\"一级分类/二级分类\" 或 \"一级/二级/三级\"）"},
+		// {Name: "classify", Type: "string", Description: "分类（格式：\"一级分类/二级分类\" 或 \"一级/二级/三级\"）"},
 		{Name: "activity", Type: "string", Description: "活动（仅支持单个活动）"},
 		{Name: "byAI", Type: "bool", Description: "AI创作声明", Default: false},
 		timerPublishField,
