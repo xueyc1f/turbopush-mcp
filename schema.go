@@ -75,8 +75,9 @@ var timerPublishField = FieldDef{
 	Description: "定时发布配置（settings 中的字段）。对象格式：{\"enable\": true, \"timer\": \"2025-04-25 15:54:00\"}。enable=true 启用定时发布，timer 为发布时间（格式：YYYY-MM-DD HH:mm:ss）",
 }
 
-var sourceFieldFactory = func(desc string, options []OptionDef) FieldDef {
+var sourceFieldFactory = func(desc string, options []OptionDef, required ...bool) FieldDef {
 	return FieldDef{
+		Required:    len(required) > 0 && required[0],
 		Name:        "source",
 		Type:        "uint",
 		Description: desc,
@@ -121,6 +122,7 @@ var platformSchemas = map[string]map[string][]FieldDef{
 	// ==================== 微信视频号 ====================
 	"wechat-video": {
 		ContentAll: {
+			{Name: "shortTitle", Type: "string", Description: "视频号标题不支持特殊符号，仅支持书名号、引号、冒号、加号、问号、百分号、摄氏度，逗号可用空格代替；使用该配置可覆盖通用标题"},
 			{Name: "location", Type: "string", Description: "地理位置，不输入表示不显示位置，输入 auto 表示由平台自动设置，其他内容表示自定义位置", Default: "auto"},
 			{Name: "collection", Type: "string", Description: "合集（请确保合集已在平台创建）"},
 			{Name: "linkType", Type: "uint", Description: "链接类型", Default: 0, Options: []OptionDef{
@@ -235,13 +237,12 @@ var platformSchemas = map[string]map[string][]FieldDef{
 
 	// ==================== 哔哩哔哩 ====================
 	"bilibili": {
-		ContentVideo:     bilibiliVideoSetting(),
-		ContentGraphText: bilibiliVideoSetting(),
+		ContentVideo: bilibiliVideoSetting(),
+		//ContentGraphText: bilibiliVideoSetting(),
 		ContentArticle: {
-			{Name: "classify", Type: "string", Description: "专栏分类，格式：\"一级/二级\"，如 \"生活/日常\"", Default: "生活/日常"},
+			{Name: "byAI", Type: "bool", Description: "AI辅助创作声明", Default: false},
 			{Name: "origin", Type: "bool", Description: "声明原创", Default: false},
-			{Name: "headerImg", Type: "string", Description: "头图（本地图片路径）"},
-			{Name: "labels", Type: "string", Description: "文章标签，多个用 / 分割，最多10个"},
+			{Name: "topic", Type: "string", Description: "文章话题"},
 			{Name: "collection", Type: "string", Description: "合集（请确保合集已在平台创建）"},
 			{Name: "public", Type: "bool", Description: "是否公开可见，false 则仅自己可见", Default: true},
 			timerPublishField,
@@ -542,8 +543,8 @@ func toutiaohaoVideoSetting() []FieldDef {
 // bilibiliVideoSetting bilibili 视频/图文设置
 func bilibiliVideoSetting() []FieldDef {
 	return []FieldDef{
-		{Name: "reprint", Type: "string", Description: "转载来源，为空表示自制，非空表示转载"},
-		{Name: "partition", Type: "string", Description: "分区", Options: []OptionDef{
+		{Name: "reprint", Type: "string", Description: "转载来源，创作声明为转载时必填"},
+		{Name: "partition", Type: "string", Description: "分区", Required: true, Options: []OptionDef{
 			{Value: "影视", Description: "影视"},
 			{Value: "娱乐", Description: "娱乐"},
 			{Value: "音乐", Description: "音乐"},
@@ -575,17 +576,15 @@ func bilibiliVideoSetting() []FieldDef {
 			{Value: "生活兴趣", Description: "生活兴趣"},
 			{Value: "生活经验", Description: "生活经验"},
 		}},
-		{Name: "creation", Type: "bool", Description: "是否允许二创", Default: true},
 		{Name: "public", Type: "bool", Description: "是否公开可见，false 则仅自己可见", Default: true},
 		sourceFieldFactory("创作声明", []OptionDef{
-			{Value: 0, Description: "不声明"},
-			{Value: 1, Description: "该视频使用人工智能合成技术"},
-			{Value: 2, Description: "视频内含有危险行为请勿轻易模仿"},
-			{Value: 3, Description: "该内容仅供娱乐请勿过分解读"},
-			{Value: 4, Description: "该内容可能引人不适请谨慎选择观看"},
-			{Value: 5, Description: "请理性适度消费"},
-			{Value: 6, Description: "个人观点仅供参考"},
-		}),
+			{Value: 1, Description: "内容无需标注"},
+			{Value: 2, Description: "含AI生成内容"},
+			{Value: 3, Description: "含虚构演绎内容"},
+			{Value: 4, Description: "内容含营销信息"},
+			{Value: 5, Description: "个人观点，仅供参考"},
+			{Value: 6, Description: "内容为转载"},
+		}, true),
 		{Name: "dynamic", Type: "string", Description: "粉丝动态（支持 @提及）"},
 		timerPublishField,
 	}
