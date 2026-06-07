@@ -99,6 +99,10 @@ func registerContentTools(s *server.MCPServer, c *Client) {
 				"title": args["title"],
 			}
 			if v, ok := args["desc"]; ok {
+				descStr, _ := v.(string)
+				if err := validateDescFormat(descStr); err != nil {
+					return mcp.NewToolResultError(err.Error()), nil
+				}
 				body["desc"] = v
 			}
 			if v, ok := args["files"]; ok {
@@ -133,6 +137,10 @@ func registerContentTools(s *server.MCPServer, c *Client) {
 				"files": args["files"],
 			}
 			if v, ok := args["desc"]; ok {
+				descStr, _ := v.(string)
+				if err := validateDescFormat(descStr); err != nil {
+					return mcp.NewToolResultError(err.Error()), nil
+				}
 				body["desc"] = v
 			}
 			if v, ok := args["thumb"]; ok {
