@@ -1,7 +1,7 @@
 ---
 name: TurboPush
 emoji: 📢
-version: 1.1.1
+version: 1.1.2
 description: 多平台内容发布助手，支持 20+ 平台一键发布文章、图文、视频
 source: https://github.com/xueyc/turbopush-mcp
 license: MIT

@@ -67,7 +67,7 @@ func main() {
 
 	s := server.NewMCPServer(
 		"turbo-push",
-		"1.0.0",
+		"1.1.2",
 		server.WithToolCapabilities(false),
 		server.WithInstructions(`TurboPush 多平台内容发布工具。
 
