@@ -56,9 +56,10 @@ func registerContentTools(s *server.MCPServer, c *Client) {
 
 	s.AddTool(
 		mcp.NewTool("create_article",
-			mcp.WithDescription("创建文章内容（Markdown 格式），创建后可通过 publish_article 发布到各平台"),
+			mcp.WithDescription("创建文章内容，支持传递 Markdown 和 HTML。未传 HTML 内容时，请安装 Pandoc 插件，由系统自动将 Markdown 转换为 HTML。创建后可通过 publish_article 发布到各平台"),
 			mcp.WithString("title", mcp.Required(), mcp.Description("文章标题")),
 			mcp.WithString("markdown", mcp.Required(), mcp.Description("文章 Markdown 内容")),
+			mcp.WithString("content", mcp.Description("文章 HTML 内容；未传时请安装 Pandoc 插件，由系统自动将 Markdown 转换为 HTML")),
 			mcp.WithString("desc", mcp.Description("文章摘要/描述")),
 			mcp.WithArray("thumb", mcp.Description("封面图路径数组，可传1张或3张，为空则不设置封面")),
 		),
@@ -67,6 +68,9 @@ func registerContentTools(s *server.MCPServer, c *Client) {
 			body := map[string]any{
 				"title":    args["title"],
 				"markdown": args["markdown"],
+			}
+			if v, ok := args["content"]; ok {
+				body["content"] = v
 			}
 			if v, ok := args["desc"]; ok {
 				body["desc"] = v

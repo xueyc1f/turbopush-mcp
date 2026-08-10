@@ -248,7 +248,7 @@ var platformSchemas = map[string]map[string][]FieldDef{
 	// ==================== 哔哩哔哩 ====================
 	"bilibili": {
 		ContentVideo: bilibiliVideoSetting(),
-		//ContentGraphText: bilibiliVideoSetting(),
+		// ContentGraphText: bilibiliVideoSetting(),
 		ContentArticle: {
 			{Name: "byAI", Type: "bool", Description: "AI辅助创作声明", Default: false},
 			{Name: "origin", Type: "bool", Description: "声明原创", Default: false},
@@ -820,6 +820,14 @@ func zhihuVideoSetting() []FieldDef {
 			{Value: "音乐", Description: "音乐"},
 		}},
 		{Name: "reprint", Type: "bool", Description: "视频类型：true 转载 / false 原创", Default: false},
+		{Name: "source", Type: "uint", Description: "视频标记", Default: 0, Options: []OptionDef{
+			{Value: 0, Description: "内容无需标注"},
+			{Value: 1, Description: "含 AI 生成内容"},
+			{Value: 2, Description: "含虚构演绎内容"},
+			{Value: 3, Description: "内容含营销信息"},
+			{Value: 4, Description: "内容为转载"},
+			{Value: 5, Description: "个人观点仅供参考"},
+		}},
 	}
 }
 
