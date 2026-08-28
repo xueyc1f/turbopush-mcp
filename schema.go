@@ -288,7 +288,7 @@ var platformSchemas = map[string]map[string][]FieldDef{
 				{Value: 1, Description: "添加水印"},
 				{Value: 2, Description: "添加贴片"},
 			}},
-			FieldDef{Name: "source", Type: "uint", Description: "创作声明（仅对视频生效）", Default: 0, Options: []OptionDef{
+			FieldDef{Name: "source", Type: "uint", Description: "创作声明（仅对视频生效）", Default: 1, Required: true, Options: []OptionDef{
 				{Value: 1, Description: "无需声明"},
 				{Value: 2, Description: "含AI生成内容"},
 				{Value: 3, Description: "内容为转载"},
