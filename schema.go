@@ -288,6 +288,21 @@ var platformSchemas = map[string]map[string][]FieldDef{
 				{Value: 1, Description: "添加水印"},
 				{Value: 2, Description: "添加贴片"},
 			}},
+			FieldDef{Name: "source", Type: "uint", Description: "创作声明（仅对视频生效）", Default: 0, Options: []OptionDef{
+				{Value: 1, Description: "无需声明"},
+				{Value: 2, Description: "含AI生成内容"},
+				{Value: 3, Description: "内容为转载"},
+				{Value: 4, Description: "含虚构演绎内容"},
+				{Value: 5, Description: "内容含营销信息"},
+				{Value: 6, Description: "个人个人观点，仅供参考"},
+			}},
+			FieldDef{Name: "replSource", Type: "uint", Description: "补充声明（仅对视频生效）", Default: 0, Options: []OptionDef{
+				{Value: 0, Description: "不设置"},
+				{Value: 1, Description: "内容可能引人不适"},
+				{Value: 2, Description: "内容含有高危险行为"},
+				{Value: 3, Description: "请理性适度消费"},
+				{Value: 4, Description: "未成年人请在监护人指导下浏览"},
+			}},
 		),
 	},
 
@@ -606,12 +621,14 @@ func omtencentCommonSetting() []FieldDef {
 		{Name: "labels", Type: "string", Description: "标签，多个用 / 分割，最多9个，每个标签最多8个字"},
 		{Name: "activity", Type: "string", Description: "参与活动"},
 		sourceFieldFactory("声明", []OptionDef{
-			{Value: 0, Description: "不声明"},
-			{Value: 1, Description: "该内容由AI生成"},
-			{Value: 2, Description: "演绎情节仅供娱乐"},
-			{Value: 3, Description: "取材网络谨慎甄别"},
-			{Value: 4, Description: "个人观点仅供参考"},
-			{Value: 5, Description: "旧闻"},
+			{Value: 0, Description: "无需标注"},
+			{Value: 1, Description: "该文章由AI生成（仅对文章生效）"},
+			{Value: 2, Description: "该文章由AI辅助创作（仅对文章生效）"},
+			{Value: 3, Description: "个人观点，仅供参考"},
+			{Value: 4, Description: "剧情演绎，仅供娱乐"},
+			{Value: 5, Description: "内容包含营销广告信息"},
+			{Value: 6, Description: "健康医疗分享，仅供参考"},
+			{Value: 7, Description: "危险行为，请勿模仿"},
 		}),
 		timerPublishField,
 	}
@@ -910,7 +927,7 @@ func baijiahaoBaseSetting() []FieldDef {
 	return []FieldDef{
 		{Name: "location", Type: "string", Description: "位置（将选择搜索到的第一个结果，仅对视频和图文生效）"},
 		// {Name: "classify", Type: "string", Description: "分类（格式：\"一级分类/二级分类\" 或 \"一级/二级/三级\"）"},
-		{Name: "activity", Type: "string", Description: "活动（仅支持单个活动）"},
+		// {Name: "activity", Type: "string", Description: "活动（仅支持单个活动）"},
 		{Name: "byAI", Type: "bool", Description: "AI创作声明", Default: false},
 		timerPublishField,
 	}
